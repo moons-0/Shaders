@@ -46,6 +46,7 @@ Shader ".Moons/Static/Static Dissolve"
 		[Header(Dissolve)]
 		_DissolvetilingX("Dissolve tiling (X)", Float) = 1
 		_DissolvetilingY("Dissolve tiling (Y)", Float) = 1
+		[Enum(X,0,Y,1,Z,2)]_Dissolveaxis("Dissolve axis", Float) = 1
 		_Dissolvespeed("Dissolve speed", Float) = 1
 		_Dissolverange("Dissolve range", Float) = 0
 		_Dissolvevalue("Dissolve value", Float) = 0
@@ -111,6 +112,7 @@ Shader ".Moons/Static/Static Dissolve"
 		uniform float _Scanlineaxis;
 		uniform float _Scanlinefrequency;
 		uniform float _Scanlinespeed;
+		uniform float _Dissolveaxis;
 		uniform float _Dissolvevalue;
 		uniform float _Reversedissolvedirection;
 		uniform float _Dissolverange;
@@ -266,8 +268,15 @@ Shader ".Moons/Static/Static Dissolve"
 			o.Emission = clampResult246.rgb;
 			o.Alpha = 1;
 			float4 transform280 = mul(unity_ObjectToWorld,float4( ase_vertex3Pos , 0.0 ));
+			float ifLocalVar560 = 0;
+			if( 1.0 > _Dissolveaxis )
+				ifLocalVar560 = transform280.x;
+			else if( 1.0 == _Dissolveaxis )
+				ifLocalVar560 = transform280.y;
+			else if( 1.0 < _Dissolveaxis )
+				ifLocalVar560 = transform280.z;
 			float range282 = lerp(_Dissolverange,-_Dissolverange,_Reversedissolvedirection);
-			float y_grad285 = saturate( ( ( transform280.y + _Dissolvevalue ) / range282 ) );
+			float y_grad285 = saturate( ( ( ifLocalVar560 + _Dissolvevalue ) / range282 ) );
 			float2 appendResult258 = (float2(_DissolvetilingX , _DissolvetilingY));
 			float mulTime254 = _Time.y * _Dissolvespeed;
 			float2 appendResult255 = (float2(0.0 , -1.0));
