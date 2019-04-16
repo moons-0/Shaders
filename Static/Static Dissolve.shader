@@ -50,7 +50,7 @@ Shader ".Moons/Static/Static Dissolve"
 		_Dissolvespeed("Dissolve speed", Float) = 1
 		_Dissolverange("Dissolve range", Float) = 0
 		_Dissolvevalue("Dissolve value", Float) = 0
-		[Toggle]_Reversedissolvedirection("Reverse dissolve direction", Float) = 0
+		[Toggle]_Reversedissolvedirection("Reverse dissolve direction", Float) = 1
 		[Header(Mirror)]
 		[Enum(None,0,Hide in mirror,1,Only show in mirror,2)]_Hidesettings("Hide settings", Float) = 0
 		[HideInInspector]_Color("Fallback colour", Color) = (0,0,0,1)
@@ -72,12 +72,16 @@ Shader ".Moons/Static/Static Dissolve"
 		#pragma target 3.0
 		struct Input
 		{
-			float2 uv_texcoord;
 			float3 worldPos;
+			float2 uv_texcoord;
 			float3 worldNormal;
 		};
 
 		uniform float _Vertexoffsetstyle;
+		uniform float _StaticscaleX;
+		uniform float _StaticscaleY;
+		uniform float _Screenspacestatic;
+		uniform float _Staticrotationspeed;
 		uniform float _Vertexoffsetpulse;
 		uniform float _Vertexoffsetpulsespeed;
 		uniform float _VertexoffsetX;
@@ -87,10 +91,6 @@ Shader ".Moons/Static/Static Dissolve"
 		uniform float _Vertexdeformspeed;
 		uniform float4 _Staticcolour1;
 		uniform float4 _Staticcolour2;
-		uniform float _StaticscaleX;
-		uniform float _StaticscaleY;
-		uniform float _Screenspacestatic;
-		uniform float _Staticrotationspeed;
 		uniform float _Texturebrightness;
 		uniform sampler2D _Texture;
 		uniform float4 _Texture_ST;
@@ -167,20 +167,46 @@ Shader ".Moons/Static/Static Dissolve"
 			UNITY_INITIALIZE_OUTPUT( Input, o );
 			float3 temp_cast_0 = (0.0).xxx;
 			float3 ase_vertex3Pos = v.vertex.xyz;
+			float2 appendResult515 = (float2(_StaticscaleX , _StaticscaleY));
+			float2 uv_TexCoord519 = v.texcoord.xy * appendResult515;
+			float3 ase_worldPos = mul( unity_ObjectToWorld, v.vertex );
+			float3 worldToView2_g1 = mul( UNITY_MATRIX_V, float4( _WorldSpaceCameraPos, 1 ) ).xyz;
+			float3 worldToView5_g1 = mul( UNITY_MATRIX_V, float4( ( ase_worldPos - worldToView2_g1 ), 1 ) ).xyz;
+			float2 appendResult6_g1 = (float2(worldToView5_g1.x , worldToView5_g1.y));
+			float2 break11_g1 = ( appendResult6_g1 / worldToView5_g1.z );
+			float2 appendResult15_g1 = (float2(( ( _ScreenParams.z / _ScreenParams.w ) * break11_g1.x * ( 1.0 - 0.0 ) ) , ( break11_g1.y * 2.0 * ( 1.0 - 0.0 ) )));
+			float2 temp_cast_1 = (-1.0).xx;
+			float2 temp_cast_2 = (0.5).xx;
+			float2 temp_cast_3 = (1.1).xx;
+			float2 temp_cast_4 = (0.2).xx;
+			float2 temp_output_20_0_g1 = (temp_cast_3 + (appendResult15_g1 - temp_cast_1) * (temp_cast_4 - temp_cast_3) / (temp_cast_2 - temp_cast_1));
+			float2 temp_cast_5 = (0.5).xx;
+			float3 objToWorld507 = mul( unity_ObjectToWorld, float4( float3( 0,0,0 ), 1 ) ).xyz;
+			float temp_output_510_0 = distance( _WorldSpaceCameraPos , objToWorld507 );
+			float2 appendResult513 = (float2(temp_output_510_0 , temp_output_510_0));
+			float2 lerpResult521 = lerp( uv_TexCoord519 , ( ( appendResult515 * ( temp_output_20_0_g1 - temp_cast_5 ) * appendResult513 ) + 0.5 ) , _Screenspacestatic);
+			float mulTime525 = _Time.y * _Staticrotationspeed;
+			float cos528 = cos( mulTime525 );
+			float sin528 = sin( mulTime525 );
+			float2 rotator528 = mul( lerpResult521 - float2( 0,0 ) , float2x2( cos528 , -sin528 , sin528 , cos528 )) + float2( 0,0 );
+			float2 break524 = lerpResult521;
+			float2 temp_output_529_0 = ( rotator528 + 0.2127 + ( break524.x * break524.y * 0.3713 ) );
+			float2 break537 = ( sin( ( temp_output_529_0 * 489.123 ) ) * 4.789 );
+			float noise541 = frac( ( ( 1.0 + temp_output_529_0.x ) * break537.x * break537.y ) );
 			float vertex_offset_speed457 = (0.0 + (sin( ( _Time.y * _Vertexoffsetpulsespeed ) ) - -1.0) * (1.0 - 0.0) / (1.0 - -1.0));
-			float temp_output_456_0 = ( 0 * lerp(1.0,vertex_offset_speed457,_Vertexoffsetpulse) );
+			float temp_output_456_0 = ( noise541 * lerp(1.0,vertex_offset_speed457,_Vertexoffsetpulse) );
 			float3 appendResult454 = (float3(( ase_vertex3Pos.x * (0.0 + (temp_output_456_0 - 0.0) * (_VertexoffsetX - 0.0) / (1.0 - 0.0)) ) , ( ase_vertex3Pos.y * (0.0 + (temp_output_456_0 - 0.0) * (_VertexoffsetY - 0.0) / (1.0 - 0.0)) ) , ( ase_vertex3Pos.z * (0.0 + (temp_output_456_0 - 0.0) * (_VertexoffsetZ - 0.0) / (1.0 - 0.0)) )));
 			float3 vertex_offset446 = appendResult454;
 			float temp_output_458_0 = ( ( _Vertexdeformfrequency * ase_vertex3Pos.y ) + ( _Time.y * _Vertexdeformspeed ) );
 			float vertex_deform444 = ( ( cos( temp_output_458_0 ) * 0.015 ) + ( sin( temp_output_458_0 ) * 0.005 ) );
-			float3 temp_cast_1 = (vertex_deform444).xxx;
+			float3 temp_cast_6 = (vertex_deform444).xxx;
 			float3 ifLocalVar435 = 0;
 			if( 1.0 > _Vertexoffsetstyle )
 				ifLocalVar435 = temp_cast_0;
 			else if( 1.0 == _Vertexoffsetstyle )
 				ifLocalVar435 = vertex_offset446;
 			else if( 1.0 < _Vertexoffsetstyle )
-				ifLocalVar435 = temp_cast_1;
+				ifLocalVar435 = temp_cast_6;
 			float3 vertex_final427 = ifLocalVar435;
 			v.vertex.xyz += vertex_final427;
 		}
